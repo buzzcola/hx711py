@@ -11,10 +11,8 @@ The result was that the original read_average() method, which should smooth out 
 My reimplementation of read_average is a lot more paranoid and manages to yield correct results accurate to within ~0.2g 9 times out of 10 on a 5kg load cell.
 
   * It defaults to 15 samples per reading instead of 3.
-  * It discards the two highest and lowest readings (adjustable.)
-  * It filters out anything that differs from the average by more than 20% of the standard deviation (adjustable.)
-
-Then and only then does it return the average of results. Occasionally this means it eliminates all the readings in a set, in which case it returns None.
+  * It then discards the outliers in the set until the standard deviation reaches a desired threshold.
+  * If the algorithm can't resolve, the metnod returns None, signifying a bad reading.
 
 Instructions
 ------------

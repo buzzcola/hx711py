@@ -116,17 +116,41 @@ class HX711:
 
         return long(self.lastVal)
 
-    def read_average(self, times=3):
-        values = long(0)
-        for i in range(times):
-            values += self.read_long()
+    def read_average(self, times=15, output = False):
 
-        return values / times
+        # Take [times] samples and remove outliers until the standard deviation
+        # is less than [desired_deviation]. If the set reduces to less than
+        # [min_sample_size] consider this a bad reading and return None.
 
-    def get_value(self, times=3):
+        values = [float(self.read_long()) for i in range(times)]
+        desired_deviation = 30
+        min_sample_size = 5
+        indent = 0
+
+        while True:
+            mean = numpy.mean(values)
+            std_dev = numpy.std(values)
+            if output: print '%s[%s] std: %s | avg: %s' % ('  ' * indent, len(values), std_dev, mean)
+            indent += 1
+            if len(values) >= min_sample_size and std_dev > desired_deviation:
+                outlier = mean
+                for x in values:
+                    if abs(mean - x) > abs(mean - outlier):
+                        outlier = x
+                values.remove(outlier)
+            else:
+                break
+
+        if len(values) < min_sample_size:
+            return None
+
+        return mean
+
+
+    def get_value(self, times=15):
         return self.read_average(times) - self.OFFSET
 
-    def get_weight(self, times=3):
+    def get_weight(self, times=15):
         value = self.get_value(times)
         value = value / self.REFERENCE_UNIT
         return value
